@@ -1,11 +1,8 @@
 {% extends 'base.html' %}
-{% block title %}{{ title }}{{ group }}{% endblock %}
+{% block title %}Записи сообщества {{ group }}{% endblock %}
 {% block content %}
   <div class="container py-5">
-    <h1>Лев Толстой – зеркало русской революции.</h1>
-    <p>
-      Группа тайных поклонников графа.
-    </p>
+    <h1>{{ group }}</h1>
     {% for post in posts %}
       <article>
         <ul>
