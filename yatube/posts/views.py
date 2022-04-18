@@ -1,12 +1,12 @@
-from django.shortcuts import render, get_object_or_404
-
 from .models import Post, Group
+
+from django.shortcuts import render, get_object_or_404
 
 POSTS_COUNT = 10
 
 
 def index(request):
-    posts = Post.objects.order_by('-pub_date')[:POSTS_COUNT]
+    posts = Post.objects.all()[:POSTS_COUNT]
     context = {'posts': posts}
     return render(request, 'posts/index.html', context)
 
