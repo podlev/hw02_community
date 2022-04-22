@@ -1,18 +1,23 @@
 from .models import Post, Group
 
+from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
-
-POSTS_COUNT = 10
 
 
 def index(request):
-    posts = Post.objects.all()[:POSTS_COUNT]
-    context = {'posts': posts}
+    post_list = Post.objects.all()
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {'page_obj': page_obj}
     return render(request, 'posts/index.html', context)
 
 
 def group_post(request, slug):
     group = get_object_or_404(Group, slug=slug)
-    posts = group.posts.all()[:POSTS_COUNT]
-    context = {'posts': posts, 'group': group}
+    post_list = group.posts.all()
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {'page_obj': page_obj, 'group': group}
     return render(request, 'posts/group_list.html', context)
