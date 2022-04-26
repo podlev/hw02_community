@@ -1,8 +1,10 @@
+
+from turtle import pos
 from .models import Post, Group, User
+from .forms import PostForm
 
 from django.core.paginator import Paginator
-from django.db.models import Count
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import redirect, render, get_object_or_404
 
 
 def index(request):
@@ -45,3 +47,42 @@ def post_detail(request, post_id):
                'post': post,
                'posts_count': posts_count}
     return render(request, 'posts/post_detail.html', context)
+
+
+def post_create(request):
+    if request.method == 'POST':
+        form = PostForm(request.POST)
+        if form.is_valid:
+            new_post = form.save(commit=False)
+            new_post.author_id = request.user.id
+            new_post.save()
+            return redirect('posts:profile', request.user)
+        else:
+            context = {'form': form}
+            return render(request, 'posts/create_post.html', context)
+    else:
+        form = PostForm()
+        context = {'form': form,
+                   'is_edit': False}
+        return render(request, 'posts/create_post.html', context)
+
+
+def post_edit(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    if request.method == 'POST':
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid:
+            form.save()
+            return redirect('posts:profile', request.user)
+        else:
+            context = {'form': form}
+            return render(request, 'posts/create_post.html', context)
+    else:
+        if request.user.id == post.author_id:
+            form = PostForm(instance=post)
+            context = {'form': form,
+                       'post': post,
+                       'is_edit': True}
+            return render(request, 'posts/create_post.html', context)
+        else:
+            return redirect('posts:post_detail', post_id)
