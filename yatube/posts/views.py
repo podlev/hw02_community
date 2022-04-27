@@ -1,10 +1,10 @@
 
-from turtle import pos
-from .models import Post, Group, User
-from .forms import PostForm
-
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
+
+from .forms import PostForm
+from .models import Group, Post, User
 
 
 def index(request):
@@ -27,13 +27,13 @@ def group_post(request, slug):
 
 
 def profile(request, username):
-    user = User.objects.get(username=username)
-    post_list = Post.objects.filter(author=user)
-    posts_count = user.posts.count()
+    author = get_object_or_404(User, username=username)
+    post_list = Post.objects.filter(author=author)
+    posts_count = author.posts.count()
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    context = {'user': user,
+    context = {'author': author,
                'posts_count': posts_count,
                'page_obj': page_obj}
     return render(request, 'posts/profile.html', context)
@@ -49,10 +49,11 @@ def post_detail(request, post_id):
     return render(request, 'posts/post_detail.html', context)
 
 
+@login_required
 def post_create(request):
     if request.method == 'POST':
         form = PostForm(request.POST)
-        if form.is_valid:
+        if form.is_valid():
             new_post = form.save(commit=False)
             new_post.author_id = request.user.id
             new_post.save()
@@ -67,13 +68,14 @@ def post_create(request):
         return render(request, 'posts/create_post.html', context)
 
 
+@login_required
 def post_edit(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     if request.method == 'POST':
         form = PostForm(request.POST, instance=post)
-        if form.is_valid:
+        if form.is_valid():
             form.save()
-            return redirect('posts:profile', request.user)
+            return redirect('posts:post_detail', post_id)
         else:
             context = {'form': form}
             return render(request, 'posts/create_post.html', context)
